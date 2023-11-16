@@ -1,7 +1,9 @@
 import asyncio
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import time
+import subprocess
+import os
+import psutil
 
 
 class MyHandler(FileSystemEventHandler):
@@ -28,9 +30,25 @@ async def watch_directory(path):
 async def main():
     watch_task = asyncio.create_task(watch_directory("./tmp"))
     print("running")
-    print("sleeping")
-    await asyncio.sleep(5)
-    print("sleep end")
+
+    print("run subprocess")
+    processes = []
+    processes.append(subprocess.Popen(["sleep", "1000"]))
+    processes.append(subprocess.Popen(["sleep", "1000"]))
+    processes.append(subprocess.Popen(["sleep", "1000"]))
+
+    print("show children")
+    pid = os.getpid()
+    parent_prcess = psutil.Process(pid)
+    children = parent_prcess.children(recursive=True)
+
+    for child in children:
+        print(f"child pid is {child.pid}")
+        child.kill()
+        child.wait()
+        print(f"killed {child.pid}")
+
+    print("awaiting")
     await watch_task
 
 
